@@ -13,7 +13,7 @@ class LinebotController < ApplicationController
             head :bad_request
         end
         events = client.parse_events_from(body)
-        events.each {|event|
+        events.each { |event|
             case event
             #メッセージが送られてきたときの対応(機能１)
             when Line::Bot::Event::Message
@@ -23,9 +23,9 @@ class LinebotController < ApplicationController
                     #event.message['text']:ユーザーから送られてきたメッセージ
                     input = event.message['text']
                     url = "https://www.drk7.jp/weather/xml/28.xml"
-                    xml = open(url).read.toutf8
+                    xml = open( url ).read.toutf8
                     doc = REXML::Document.new(xml)
-                    xpath = 'weatherforecast/pref/area[4]/'
+                    xpath = 'weatherforecast/pref/area[2]/'
                     #当日朝のメッセージの送信の下限値は２０％としているが、明日明後日雨が降るかどうかの下限値を３０％としている
                     min_per = 30
                     case input
@@ -50,11 +50,11 @@ class LinebotController < ApplicationController
                             push = "明後日の天気？\n気が早いね！\n明後日は雨が降らない予報だよ。\nまた当日の予報を教えてあげるね！"
                         end
                     when /.*(こんにちは|おはよう|こんばんわ).*/
-                        push = "こんにちは\n今日があなったにとって良い1日になりますように(^^)"
+                        push = "こんにちは\n今日があなたにとって良い1日になりますように(^^)"
                     else
-                        per06to12 = doc.elements[xpath + 'info[2]/rainfallchance/period[2]'].text
-                        per12to18 = doc.elements[xpath + 'info[2]/rainfallchance/period[3]'].text
-                        per18to24 = dec.elements[xpath + 'info[2]/rainfallchance/period[4]'].text
+                        per06to12 = doc.elements[xpath + 'info/rainfallchance/period[2]'].text
+                        per12to18 = doc.elements[xpath + 'info/rainfallchance/period[3]'].text
+                        per18to24 = dec.elements[xpath + 'info/rainfallchance/period[4]'].text
                         if per06to12.to_i >= min_per || per12to18.to_i >= min_per || per18to24.to_i >= min_per
                             word = [
                                 "雨だけど元気出していこうね！",
@@ -83,7 +83,7 @@ class LinebotController < ApplicationController
                     type: 'text',
                     text: push
                 }
-                client.reply_message.(event['replyToken'], message)
+                client.reply_message(event['replyToken'], message)
                 #LINEお友達追加された場合
             when Line::Bot::Event::Follow
                 # 登録したユーザーのidをユーザーテーブルに格納する
@@ -95,7 +95,7 @@ class LinebotController < ApplicationController
                 User.find_by(line_id: line_id).destoy
             end
         }
-        :ok
+        head :ok
     end
     
     private
